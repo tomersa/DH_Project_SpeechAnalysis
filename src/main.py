@@ -142,6 +142,7 @@ def main():
     INPUT_SPEECHES_FILE = "res/speeches_text.csv"
     INPUT_SUBJECTS_FILE = "res/subjects.csv"
     OUTPUT_PERSON_DIRECTORY = "output/"
+    OUTPUT_FOR_DOTAN = "output_for_dotan/"
 
     #MalletParser.createInputForMallet()
     speeches_dict = read_speeches(INPUT_SPEECHES_FILE)
@@ -154,14 +155,25 @@ def main():
     #Write persons output files
     for person, subjects in person_subjects.items():
         output_handle = open(os.path.join(OUTPUT_PERSON_DIRECTORY, person), "w")
+        output_handle_dotan = open(os.path.join(OUTPUT_FOR_DOTAN, person), "w")
 
         try:
+            #For dotan
+            dotan_output_string = ""
+            for k,v in subjects.items():
+                dotan_output_string += "{0},{1},{2}\n".format(person, k, v)
+
             subject_freq_output_string = create_freq_output_string(subjects)
+
             output_handle.flush()
+            output_handle_dotan.flush()
+
             output_handle.write(subject_freq_output_string)
+            output_handle_dotan.write(dotan_output_string)
 
         finally:
             output_handle.close()
+            output_handle_dotan.close()
 
 if __name__ == "__main__":
     main()
