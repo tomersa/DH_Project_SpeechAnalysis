@@ -1,0 +1,6 @@
+res/barack_obama_speeches
+.idea
+res/www.americanrhetoric.com/
+res/www.speeches-usa.com/
+output.mallet
+src/*.pyc
