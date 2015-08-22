@@ -1,7 +1,7 @@
 import os, sys
 
 SPEECHES_PATH = 'res/barack_obama_speeches/text/'
-OUTPUT_FILE = "output.mallet"
+OUTPUT_FILE = "input_for_mallet.mallet"
 
 
 def fetch_subject(file):
@@ -13,7 +13,7 @@ def fetch_text(text):
     text = text.replace("\n", " ")
     return text
 
-def main():
+def createInputForMallet():
     output_handle = open(OUTPUT_FILE, "w")
     output_handle.flush()
 
@@ -35,4 +35,4 @@ def main():
         output_handle.close()
 
 if __name__ == "__main__":
-    main()
+    createInputForMallet()
