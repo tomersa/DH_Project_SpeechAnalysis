@@ -4,6 +4,9 @@ import os
 import word_cloud_manager
 
 DEBUG = False
+TF_IDF_MAX = 50
+TF_IDF_MIN = 0
+NUMBER_OF_WORDS = 10
 
 def remove_headers(lines):
     return lines[1:]
@@ -46,7 +49,7 @@ def parse_speeches_by_year(text):
     input_data_dict = {}
 
     if DEBUG:
-        lines = lines[:20]
+        lines = lines[:10]
 
     for line in lines:
         #Fetching data from line
@@ -235,15 +238,43 @@ def create_speeches_by_person(input_speeches_file,\
     write_persons_output_files(output_person_input_for_word_cloud_directory, output_person_word_cloud, person_subjects)
 
 
-def get_most_common_words(freq_dist):
+def calculate_normalized_frequency(freq_dist, tf_idf, word):
+    val = (float(freq_dist[word]) / tf_idf[word])
+    return val
+
+
+def get_most_common_words(freq_dist, tf_idf):
     most_common = {}
     stop_words = nltk.corpus.stopwords.words('english')
 
     for word in freq_dist:
         if not word in stop_words:
-            most_common[word] = freq_dist[word]
+            normalized_frequency = calculate_normalized_frequency(freq_dist, tf_idf, word)
+            most_common[word] = normalized_frequency
+
+    max_freq = max(most_common.values())
+    min_freq = min(most_common.values())
+
+    for word in most_common.keys():
+        most_common[word] = (most_common[word] - min_freq) / max_freq #Normalize to [0-1]
+        most_common[word] = (most_common[word] * (TF_IDF_MAX - TF_IDF_MIN)) + TF_IDF_MIN #Normalize to [TF_IDF_MIN, TF_IDF_MAX]
 
     return most_common
+
+
+def calculate_tf_idf(years_dict):
+    number_of_years = len(years_dict.keys())
+    tf_idf_fd = nltk.FreqDist()
+    tf_idf_dict = {}
+
+    for year in years_dict.values():
+        for speech in year.values():
+                tf_idf_fd += nltk.FreqDist(fetch_words(speech))
+
+    for word in tf_idf_fd:
+        tf_idf_dict[word] = float(tf_idf_fd[word]) / number_of_years
+
+    return tf_idf_dict
 
 
 
@@ -257,8 +288,10 @@ def create_speeches_by_year(input_speeches_file,\
     year_fd_dict = create_key_fd_dict(speeches_dict)
     year_frequent_words_dict = {}
 
+    tf_idf = calculate_tf_idf(speeches_dict)
+
     for key, value in year_fd_dict.items():
-        year_frequent_words_dict[key] = get_most_common_words(value)
+        year_frequent_words_dict[key] = get_most_common_words(value, tf_idf)
 
     write_by_year_output_files(output_person_input_for_word_cloud_directory, output_year_word_cloud, year_frequent_words_dict)
 
@@ -273,10 +306,10 @@ def main(input_speeches_file,\
         if not os.path.exists(path):
             os.makedirs(path)
 
-    create_speeches_by_person(input_speeches_file,\
-         input_subjects_file,\
-         output_person_input_for_word_cloud_directory,\
-         output_person_word_cloud)
+    # create_speeches_by_person(input_speeches_file,\
+    #      input_subjects_file,\
+    #      output_person_input_for_word_cloud_directory,\
+    #      output_person_word_cloud)
 
     create_speeches_by_year(input_speeches_file,\
          output_person_input_for_word_cloud_directory,\
@@ -291,7 +324,6 @@ if __name__ == "__main__":
     OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY = "output/input_for_word_cloud/"
     OUTPUT_PERSON_WORD_CLOUD = "output/word_cloud/"
     OUTPUT_YEAR_WORD_CLOUD = "output/word_cloud_by_year/"
-    NUMBER_OF_WORDS = 10
 
     main(INPUT_SPEECHES_FILE,\
          INPUT_SUBJECTS_FILE,\
