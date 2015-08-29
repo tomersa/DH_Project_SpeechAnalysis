@@ -1,7 +1,7 @@
 import MalletParser
 import nltk
 import os
-import show_word_cloud
+import word_cloud_manager
 
 DEBUG = True
 
@@ -12,6 +12,8 @@ def remove_headers(lines):
 def fetch_person(line):
     return line.split(',')[0]
 
+def fetch_year(line):
+    return line.split(',')[1]
 
 def fetch_text(line):
     return ",".join(line.split(',')[3:])
@@ -29,14 +31,18 @@ def parse_speeches(text):
         #Fetching data from line
         person = fetch_person(line)
         title = fetch_title(line)
+        year = fetch_year(line)
         text = fetch_text(line)
 
         #Adding to input_data_dict person key if not already present
         if not input_data_dict.has_key(person):
             input_data_dict[person] = {}
 
+        if not input_data_dict.has_key(year):
+            input_data_dict[year] = {}
 
         input_data_dict[person][title] = text
+        input_data_dict[year][person + title] = text
 
     return input_data_dict
 
@@ -137,37 +143,15 @@ def create_freq_output_string(subjects):
 
     return " ".join(subject_list)
 
-
-def main():
-    INPUT_SPEECHES_FILE = "res/speeches_text.csv"
-    INPUT_SUBJECTS_FILE = "res/subjects.csv"
-    OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY = "output/for_word_cloud/"
-    OUTPUT_PERSON_WORD_CLOUD = "output/word_cloud/"
-    OUTPUT_YEAR_WORD_CLOUD = "output/word_cloud/"
-
-
-    MalletParser.createInputForMallet()
-    speeches_dict = read_speeches(INPUT_SPEECHES_FILE)
-    subjects_dict = read_subjects(INPUT_SUBJECTS_FILE)
-
-    person_fd_dict = create_person_df_dict(speeches_dict)
-
-    person_subjects = create_person_subjects_dict(subjects_dict, person_fd_dict)
-
-    #Creating directories if necessary
-    for path in [OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY, OUTPUT_PERSON_WORD_CLOUD, OUTPUT_YEAR_WORD_CLOUD]:
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-    #Write persons output files
+def write_by_year_output_files(output_person_input_for_word_cloud_directory, output_person_word_cloud, person_subjects):
     for person, subjects in person_subjects.items():
-        output_handle = open(os.path.join(OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY, person), "w")
-        output_handle_dotan = open(os.path.join(OUTPUT_PERSON_WORD_CLOUD, person), "w")
+        output_handle = open(os.path.join(output_person_input_for_word_cloud_directory, person), "w")
+        output_handle_dotan = open(os.path.join(output_person_word_cloud, person), "w")
 
         try:
             #For dotan
             dotan_output_string = ""
-            for k,v in subjects.items():
+            for k, v in subjects.items():
                 dotan_output_string += "{0},{1},{2}\n".format(person, k, v)
 
             subject_freq_output_string = create_freq_output_string(subjects)
@@ -182,6 +166,64 @@ def main():
             output_handle.close()
             output_handle_dotan.close()
 
+def write_persons_output_files(output_person_input_for_word_cloud_directory, output_person_word_cloud, person_subjects):
+    for person, subjects in person_subjects.items():
+        output_handle = open(os.path.join(output_person_input_for_word_cloud_directory, person), "w")
+        output_handle_dotan = open(os.path.join(output_person_word_cloud, person), "w")
+
+        try:
+            #For dotan
+            dotan_output_string = ""
+            for k, v in subjects.items():
+                dotan_output_string += "{0},{1},{2}\n".format(person, k, v)
+
+            subject_freq_output_string = create_freq_output_string(subjects)
+
+            output_handle.flush()
+            output_handle_dotan.flush()
+
+            output_handle.write(subject_freq_output_string)
+            output_handle_dotan.write(dotan_output_string)
+
+        finally:
+            output_handle.close()
+            output_handle_dotan.close()
+
+
+def main(input_speeches_file,\
+         input_subjects_file,\
+         output_person_input_for_word_cloud_directory,\
+         output_person_word_cloud,\
+         output_year_word_cloud):
+
+    MalletParser.createInputForMallet()
+    speeches_dict = read_speeches(input_speeches_file)
+    subjects_dict = read_subjects(input_subjects_file)
+
+    person_fd_dict = create_person_df_dict(speeches_dict)
+
+    person_subjects = create_person_subjects_dict(subjects_dict, person_fd_dict)
+
+    #Creating directories if necessary
+    for path in [output_person_input_for_word_cloud_directory, output_person_word_cloud, output_year_word_cloud]:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    write_persons_output_files(output_person_input_for_word_cloud_directory, output_person_word_cloud, person_subjects)
+
 if __name__ == "__main__":
-    main()
-    show_word_cloud.main()
+    INPUT_SPEECHES_FILE = "res/speeches_text.csv"
+    INPUT_SUBJECTS_FILE = "res/subjects.csv"
+    OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY = "output/for_word_cloud/"
+    OUTPUT_PERSON_WORD_CLOUD = "output/word_cloud/"
+    OUTPUT_YEAR_WORD_CLOUD = "output/word_cloud_by_year/"
+
+    main(INPUT_SPEECHES_FILE,\
+         INPUT_SUBJECTS_FILE,\
+         OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY,\
+         OUTPUT_PERSON_WORD_CLOUD,\
+         OUTPUT_YEAR_WORD_CLOUD)
+
+    word_cloud_manager.main(OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY,\
+                         OUTPUT_PERSON_WORD_CLOUD,\
+                         OUTPUT_YEAR_WORD_CLOUD)
