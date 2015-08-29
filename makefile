@@ -1,5 +1,7 @@
 all: test
 
+#Need to download stopwords corpus for nltk
+
 test: build
 	python src/main.py
 
