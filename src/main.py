@@ -141,10 +141,12 @@ def create_freq_output_string(subjects):
 def main():
     INPUT_SPEECHES_FILE = "res/speeches_text.csv"
     INPUT_SUBJECTS_FILE = "res/subjects.csv"
-    OUTPUT_PERSON_DIRECTORY = "output/"
-    OUTPUT_FOR_DOTAN = "output_for_dotan/"
+    OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY = "output/for_word_cloud/"
+    OUTPUT_PERSON_WORD_CLOUD = "output/word_cloud/"
+    OUTPUT_YEAR_WORD_CLOUD = "output/word_cloud/"
 
-    #MalletParser.createInputForMallet()
+
+    MalletParser.createInputForMallet()
     speeches_dict = read_speeches(INPUT_SPEECHES_FILE)
     subjects_dict = read_subjects(INPUT_SUBJECTS_FILE)
 
@@ -152,10 +154,15 @@ def main():
 
     person_subjects = create_person_subjects_dict(subjects_dict, person_fd_dict)
 
+    #Creating directories if necessary
+    for path in [OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY, OUTPUT_PERSON_WORD_CLOUD, OUTPUT_YEAR_WORD_CLOUD]:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
     #Write persons output files
     for person, subjects in person_subjects.items():
-        output_handle = open(os.path.join(OUTPUT_PERSON_DIRECTORY, person), "w")
-        output_handle_dotan = open(os.path.join(OUTPUT_FOR_DOTAN, person), "w")
+        output_handle = open(os.path.join(OUTPUT_PERSON_INPUT_FOR_WORD_CLOUD_DIRECTORY, person), "w")
+        output_handle_dotan = open(os.path.join(OUTPUT_PERSON_WORD_CLOUD, person), "w")
 
         try:
             #For dotan
