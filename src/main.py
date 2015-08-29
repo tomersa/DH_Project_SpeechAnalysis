@@ -31,18 +31,13 @@ def parse_speeches(text):
         #Fetching data from line
         person = fetch_person(line)
         title = fetch_title(line)
-        year = fetch_year(line)
         text = fetch_text(line)
 
         #Adding to input_data_dict person key if not already present
         if not input_data_dict.has_key(person):
             input_data_dict[person] = {}
 
-        if not input_data_dict.has_key(year):
-            input_data_dict[year] = {}
-
         input_data_dict[person][title] = text
-        input_data_dict[year][person + title] = text
 
     return input_data_dict
 
