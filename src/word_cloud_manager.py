@@ -17,10 +17,9 @@ def generate_cloud(person_file_path, person):
     plt.suptitle(person, fontsize=20, fontweight='bold')
     plt.show()
 
-def main():
-    for file in os.listdir("output"):
-        person_file_path = os.path.join("output", file)
+def main(output_person_input_for_word_cloud_directory,\
+                         output_person_word_cloud,\
+                         output_year_word_cloud):
+    for file in os.listdir(output_person_input_for_word_cloud_directory):
+        person_file_path = os.path.join(output_person_input_for_word_cloud_directory, file)
         generate_cloud(person_file_path, file)
-
-if __name__ == "__main__":
-    main()
